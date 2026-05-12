@@ -1,0 +1,34 @@
+{
+    "editor.fontFamily": "'Cascadia Code', 'Consolas', monospace",
+    "editor.tabSize": 4,
+    "editor.fontSize": 14,
+    "editor.lineHeight": 20,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+
+    "C_Cpp.intelliSense.cacheSize": 512, 
+    "C_Cpp.updateChannel": "none",
+    "C_Cpp.workspaceParsingPriority": "low",
+    "C_Cpp.enhancedColorization": "disabled",
+    
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}",
+        "C:/msys64/mingw64/include",
+        "C:/msys64/opt/devkitPro/wut/include",
+        "/opt/devkitPro/wut/include",
+        "/usr/include"
+    ],
+
+    "C_Cpp.clang_format_fallbackStyle": "LLVM",
+
+    "editor.minimap.enabled": false,
+    "editor.renderWhitespace": "none",
+    "workbench.list.smoothScrolling": true,
+
+    "search.exclude": {
+        "build/": false,
+        "build/**": true,
+        "**/*.o": true,
+        "**/*.d": true
+    },
+}
