@@ -18,4 +18,12 @@ namespace SYS {
 
         return true;
     }
+
+    bool Shutdown(void) {
+        SYS::Report::Log("\n----------------------------------------------------------------------\n");
+        SYS::Report::Log("EG2L SHUTDOWN TITLE\n");
+        SYS::Report::Log("----------------------------------------------------------------------\n");
+
+        return true;
+    }
 }

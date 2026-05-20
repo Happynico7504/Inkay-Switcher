@@ -3,6 +3,8 @@
 #include <gx2/display.h>
 #include "eg2/libs/typedefs.h"
 
+struct RenderResolutionAspect { f32 width = 0.0f, height = 0.0f; } gTargetRES;
+
 namespace Render {
     extern f32 gTargetWidth;
     extern f32 gTargetHeight;
