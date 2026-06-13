@@ -6,7 +6,8 @@ namespace Inkay {
     namespace Repos {
         namespace Web {
             extern std::string JuxtFileURL;
-            extern std::string RoseFileURL;
+            extern std::string RoseWMSFileURL;
+            extern std::string RoseWPSFileURL;
             extern std::string NicoFileURL;
         }
 

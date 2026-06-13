@@ -19,12 +19,28 @@ namespace Inkay {
         static std::vector<u8> gZipData;
         static std::string gCurrentName;
         static std::atomic<bool> gPendingExtract{false};
+        static int gRosePhase{0};
 
         static void SetError(const std::string& msg) {
             LastError = msg;
             HasError.store(true, std::memory_order_release);
             State.store(DOWNLOADSTATE_ERROR, std::memory_order_release);
             SYS::Report::Log("Inkay::Download::SetError(): %s\n", msg.c_str());
+        }
+
+        static void StartDownload(const std::string& name, const std::string& url) {
+            if (url.empty()) {
+                SetError(name + ": No release found");
+                return;
+            }
+
+            gCurrentName = name;
+            gZipData.clear();
+
+            State.store(DOWNLOADSTATE_DOWNLOADING, std::memory_order_release);
+            gPendingExtract.store(true, std::memory_order_release);
+
+            Network::DownloadAsync(url, &gZipData);
         }
 
         void UpdateDownloads(void) {
@@ -51,6 +67,21 @@ namespace Inkay {
             SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s ZIP magic: %02X %02X %02X %02X\n", gCurrentName.c_str(), gZipData[0], gZipData[1], gZipData[2], gZipData[3]);
             SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s ZIP %u bytes\n", gCurrentName.c_str(), (unsigned)gZipData.size());
 
+            if (gCurrentName == "Rose") {
+                if (gRosePhase == 0) {
+                    Inkay::Files::WriteWMS(gZipData.data(), gZipData.size());
+                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): Rose WMS written\n");
+                    gRosePhase = 1;
+                    StartDownload("Rose", Inkay::Repos::Web::RoseWPSFileURL);
+                } else {
+                    Inkay::Files::WriteWPS(gZipData.data(), gZipData.size());
+                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): Rose WPS written, install complete\n");
+                    gRosePhase = 0;
+                    State.store(DOWNLOADSTATE_FINISHED, std::memory_order_release);
+                }
+                return;
+            }
+
             if (!Inkay::ZIP::Extract(gZipData)) {
                 SetError("Inkay::Download::UpdateDownloads(): " + gCurrentName + " Extract failed");
                 return;
@@ -60,18 +91,8 @@ namespace Inkay {
             State.store(DOWNLOADSTATE_FINISHED, std::memory_order_release);
         }
 
-        static void StartDownload(const std::string& name, const std::string& url) {
-            gCurrentName = name;
-            gZipData.clear();
-
-            State.store(DOWNLOADSTATE_DOWNLOADING, std::memory_order_release);
-            gPendingExtract.store(true, std::memory_order_release);
-
-            Network::DownloadAsync(url, &gZipData);
-        }
-
         void JuxtDownload(void) { StartDownload("Juxt", Inkay::Repos::Web::JuxtFileURL); }
-        void RoseDownload(void) { StartDownload("Rose", Inkay::Repos::Web::RoseFileURL); }
+        void RoseDownload(void) { gRosePhase = 0; StartDownload("Rose", Inkay::Repos::Web::RoseWMSFileURL); }
         void NicoDownload(void) { StartDownload("Nico", Inkay::Repos::Web::NicoFileURL); }
     }
 }

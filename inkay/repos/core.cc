@@ -10,7 +10,8 @@ namespace Inkay {
     namespace Repos {
         namespace Web {
             std::string JuxtFileURL;
-            std::string RoseFileURL;
+            std::string RoseWMSFileURL;
+            std::string RoseWPSFileURL;
             std::string NicoFileURL;
         }
 
@@ -27,7 +28,7 @@ namespace Inkay {
             Network::SetHeader("X-GitHub-Api-Version: 2022-11-28");
 
             Inkay::JSON::ParseGitHubDownloadURL(JuxtREPO, Web::JuxtFileURL);
-            Inkay::JSON::ParseGitHubDownloadURL(RoseREPO, Web::RoseFileURL);
+            Inkay::JSON::ParseGitHubRawFileURLs(RoseREPO, Web::RoseWMSFileURL, Web::RoseWPSFileURL);
             Inkay::JSON::ParseGitHubDownloadURL(NicoREPO,  Web::NicoFileURL);
 
             Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
@@ -44,7 +45,8 @@ namespace Inkay {
             SYS::Report::Log("Juxt WPS: %s\n", Inkay::Versions::WPS::JuxtSHA1.c_str());
             SYS::Report::Log("Juxt PLG: %s\n\n", ok ? "true" : "false");
             SYS::Report::Log("Juxt URL: %s\n", Web::JuxtFileURL.c_str());
-            SYS::Report::Log("Rose URL: %s\n", Web::RoseFileURL.c_str());
+            SYS::Report::Log("Rose WMS: %s\n", Web::RoseWMSFileURL.c_str());
+            SYS::Report::Log("Rose WPS: %s\n", Web::RoseWPSFileURL.c_str());
             SYS::Report::Log("Nico URL: %s\n", Web::NicoFileURL.c_str());
             SYS::Report::Log("-----------------------------------\n\n");
         }
@@ -53,7 +55,8 @@ namespace Inkay {
 
         void Shutdown(void) {
             if (!Web::JuxtFileURL.empty()) Web::JuxtFileURL.clear();
-            if (!Web::RoseFileURL.empty()) Web::RoseFileURL.clear();
+            if (!Web::RoseWMSFileURL.empty()) Web::RoseWMSFileURL.clear();
+            if (!Web::RoseWPSFileURL.empty()) Web::RoseWPSFileURL.clear();
             if (!Web::NicoFileURL.empty()) Web::NicoFileURL.clear();
 
             if (!Inkay::Versions::WMS::LocalSHA1.empty()) Inkay::Versions::WMS::LocalSHA1.clear();

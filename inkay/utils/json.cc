@@ -28,6 +28,24 @@ namespace Inkay {
             }
         }
 
+        void ParseGitHubRawFileURLs(const char* url, std::string& outWMSUrl, std::string& outWPSUrl) {
+            if (!Network::SetConnection(url)) {
+                SYS::Report::Log("Inkay::JSON::ParseGitHubRawFileURLs(): curl fail for: %s\n", url);
+                return;
+            }
+
+            auto j = nlohmann::json::parse(Network::GetLastResponse(), nullptr, false);
+            if (j.is_discarded() || !j.contains("assets")) return;
+
+            for (const auto& asset : j["assets"]) {
+                if (!asset.contains("name") || !asset.contains("browser_download_url")) continue;
+                std::string name = asset["name"];
+                std::string dlUrl = asset["browser_download_url"];
+                if (name.find(".wms") != std::string::npos) outWMSUrl = dlUrl;
+                if (name.find(".wps") != std::string::npos) outWPSUrl = dlUrl;
+            }
+        }
+
         void ParseAromaSHA1(const char* url, std::string& outWmsSHA1, std::string& outWpsSHA1) {
             if (!Network::SetConnection(url)) {
                 SYS::Report::Log("ParseAromaSHA1(): curl fail %s\n", url);
