@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITPPC: /opt/devkitpro/devkitPPC
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WUT
+        run: dkp-pacman -Sy --noconfirm wiiu-dev
+
+      - name: Build
+        run: make
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roseverse_installer
+          path: build/roseverse_installer.wuhb
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: roseverse_installer
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest
+          files: roseverse_installer.wuhb

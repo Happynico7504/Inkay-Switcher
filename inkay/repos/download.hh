@@ -20,6 +20,7 @@ namespace Inkay {
 
         void JuxtDownload(void);
         void RoseDownload(void);
+        void NicoDownload(void);
         void UpdateDownloads(void);
     }
 }

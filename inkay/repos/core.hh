@@ -7,6 +7,7 @@ namespace Inkay {
         namespace Web {
             extern std::string JuxtFileURL;
             extern std::string RoseFileURL;
+            extern std::string NicoFileURL;
         }
 
         void Init(void);

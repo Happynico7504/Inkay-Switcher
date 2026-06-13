@@ -47,6 +47,7 @@ namespace Inkay {
                     if (ButtonsHolder) {
                         ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 10.0f);
                         ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 100.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 190.0f);
                     }
 
                     if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, 100.0f);
@@ -78,6 +79,13 @@ namespace Inkay {
                             15.0f, 90.0f,
                             RENDERRATIO_ASPECT_854x480, 160.0f, 100.0f,
                             "Roseverse"
+                        );
+
+                        OSCAFESTDFont->SetColor(Colors::Default);
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, 185.0f,
+                            RENDERRATIO_ASPECT_854x480, 250.0f, 100.0f,
+                            "Nico Christmann"
                         );
 
                         OSCAFESTDFont->SetColor(Colors::Browser);
@@ -245,6 +253,10 @@ namespace Inkay {
                     Inkay::Download::PendingVersion = "Rose";
                     Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
                     Inkay::Dirs::LoadEnvironments();
+                } else if (DRC::IsTouchInsideSingle(302.0f, 387.5f, 400.0f, 85.0f)) {
+                    Inkay::Download::PendingVersion = "Nico";
+                    Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
+                    Inkay::Dirs::LoadEnvironments();
                 }
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
@@ -261,6 +273,7 @@ namespace Inkay {
 
                         if (Inkay::Download::PendingVersion == "Juxt") Inkay::Download::JuxtDownload();
                         else if (Inkay::Download::PendingVersion == "Rose") Inkay::Download::RoseDownload();
+                        else if (Inkay::Download::PendingVersion == "Nico") Inkay::Download::NicoDownload();
                     }
                 } else {
                     Inkay::Download::SelectedEnvironment = Inkay::Dirs::gEnvironments[Inkay::Dirs::gSelectedEnv];
@@ -268,6 +281,7 @@ namespace Inkay {
 
                     if (Inkay::Download::PendingVersion == "Juxt") Inkay::Download::JuxtDownload();
                     else if (Inkay::Download::PendingVersion == "Rose") Inkay::Download::RoseDownload();
+                    else if (Inkay::Download::PendingVersion == "Nico") Inkay::Download::NicoDownload();
                 } 
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
