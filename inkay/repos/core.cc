@@ -33,7 +33,6 @@ namespace Inkay {
             Inkay::JSON::ParseGitHubRawFileURLs(NicoREPO,  Web::NicoWMSFileURL, Web::NicoWPSFileURL);
 
             Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
-            Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
 
             bool ok = Inkay::Versions::VerifyJuxtInstall();
 

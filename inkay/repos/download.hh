@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <string>
 
 enum DownloadState {
     DOWNLOADSTATE_SELECT,
@@ -13,9 +14,11 @@ enum DownloadState {
 
 namespace Inkay {
     namespace Download {
+        enum class Source { None, Juxt, Rose, Nico };
+
         extern std::string LastError;
         extern std::atomic<bool> HasError;
-        extern std::string PendingVersion;
+        extern Source Pending;
         extern std::string SelectedEnvironment;
         extern std::atomic<DownloadState> State;
 
