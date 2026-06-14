@@ -12,7 +12,8 @@ namespace Inkay {
             std::string JuxtFileURL;
             std::string RoseWMSFileURL;
             std::string RoseWPSFileURL;
-            std::string NicoFileURL;
+            std::string NicoWMSFileURL;
+            std::string NicoWPSFileURL;
         }
 
         static const char* JuxtREPO = "https://api.github.com/repos/PretendoNetwork/Inkay/releases/latest";
@@ -29,7 +30,7 @@ namespace Inkay {
 
             Inkay::JSON::ParseGitHubDownloadURL(JuxtREPO, Web::JuxtFileURL);
             Inkay::JSON::ParseGitHubRawFileURLs(RoseREPO, Web::RoseWMSFileURL, Web::RoseWPSFileURL);
-            Inkay::JSON::ParseGitHubDownloadURL(NicoREPO,  Web::NicoFileURL);
+            Inkay::JSON::ParseGitHubRawFileURLs(NicoREPO,  Web::NicoWMSFileURL, Web::NicoWPSFileURL);
 
             Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
             Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
@@ -47,7 +48,8 @@ namespace Inkay {
             SYS::Report::Log("Juxt URL: %s\n", Web::JuxtFileURL.c_str());
             SYS::Report::Log("Rose WMS: %s\n", Web::RoseWMSFileURL.c_str());
             SYS::Report::Log("Rose WPS: %s\n", Web::RoseWPSFileURL.c_str());
-            SYS::Report::Log("Nico URL: %s\n", Web::NicoFileURL.c_str());
+            SYS::Report::Log("Nico WMS: %s\n", Web::NicoWMSFileURL.c_str());
+            SYS::Report::Log("Nico WPS: %s\n", Web::NicoWPSFileURL.c_str());
             SYS::Report::Log("-----------------------------------\n\n");
         }
 
@@ -57,7 +59,8 @@ namespace Inkay {
             if (!Web::JuxtFileURL.empty()) Web::JuxtFileURL.clear();
             if (!Web::RoseWMSFileURL.empty()) Web::RoseWMSFileURL.clear();
             if (!Web::RoseWPSFileURL.empty()) Web::RoseWPSFileURL.clear();
-            if (!Web::NicoFileURL.empty()) Web::NicoFileURL.clear();
+            if (!Web::NicoWMSFileURL.empty()) Web::NicoWMSFileURL.clear();
+            if (!Web::NicoWPSFileURL.empty()) Web::NicoWPSFileURL.clear();
 
             if (!Inkay::Versions::WMS::LocalSHA1.empty()) Inkay::Versions::WMS::LocalSHA1.clear();
             if (!Inkay::Versions::WMS::JuxtSHA1.empty()) Inkay::Versions::WMS::JuxtSHA1.clear();

@@ -67,15 +67,18 @@ namespace Inkay {
             SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s ZIP magic: %02X %02X %02X %02X\n", gCurrentName.c_str(), gZipData[0], gZipData[1], gZipData[2], gZipData[3]);
             SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s ZIP %u bytes\n", gCurrentName.c_str(), (unsigned)gZipData.size());
 
-            if (gCurrentName == "Rose") {
+            if (gCurrentName == "Rose" || gCurrentName == "Nico") {
                 if (gRosePhase == 0) {
                     Inkay::Files::WriteWMS(gZipData.data(), gZipData.size());
-                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): Rose WMS written\n");
+                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s WMS written\n", gCurrentName.c_str());
                     gRosePhase = 1;
-                    StartDownload("Rose", Inkay::Repos::Web::RoseWPSFileURL);
+                    const std::string& wpsUrl = (gCurrentName == "Rose")
+                        ? Inkay::Repos::Web::RoseWPSFileURL
+                        : Inkay::Repos::Web::NicoWPSFileURL;
+                    StartDownload(gCurrentName, wpsUrl);
                 } else {
                     Inkay::Files::WriteWPS(gZipData.data(), gZipData.size());
-                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): Rose WPS written, install complete\n");
+                    SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s WPS written, install complete\n", gCurrentName.c_str());
                     gRosePhase = 0;
                     State.store(DOWNLOADSTATE_FINISHED, std::memory_order_release);
                 }
@@ -93,6 +96,6 @@ namespace Inkay {
 
         void JuxtDownload(void) { StartDownload("Juxt", Inkay::Repos::Web::JuxtFileURL); }
         void RoseDownload(void) { gRosePhase = 0; StartDownload("Rose", Inkay::Repos::Web::RoseWMSFileURL); }
-        void NicoDownload(void) { StartDownload("Nico", Inkay::Repos::Web::NicoFileURL); }
+        void NicoDownload(void) { gRosePhase = 0; StartDownload("Nico", Inkay::Repos::Web::NicoWMSFileURL); }
     }
 }

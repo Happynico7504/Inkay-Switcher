@@ -8,7 +8,8 @@ namespace Inkay {
             extern std::string JuxtFileURL;
             extern std::string RoseWMSFileURL;
             extern std::string RoseWPSFileURL;
-            extern std::string NicoFileURL;
+            extern std::string NicoWMSFileURL;
+            extern std::string NicoWPSFileURL;
         }
 
         void Init(void);
