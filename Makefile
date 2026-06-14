@@ -1,6 +1,7 @@
 #--------------------------------------------------------------------------------
-# Roseverse Installer - Makefile
-# - Erikku Satō
+# Inkay Switcher - Makefile
+# - Nico Christmann
+# - Based on Roseverse Installer by Erikku Satō (Project Rose)
 #--------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------
 
@@ -33,7 +34,7 @@ endif
 #----------------------------------------
 include $(WUT_ROOT)/share/wut_rules
 
-TARGETNAME  = roseverse_installer
+TARGETNAME  = inkay_switcher
 TARGET      = inkay
 
 BUILDDIR 	= build
@@ -90,9 +91,9 @@ WUHBTVSPLASH    = $(METADIR)/bootTvTex.png
 WUHBDRCSPLASH   = $(METADIR)/bootDrcTex.png
 
 WUHBFLAGS = \
-	--name="Roseverse Installer" \
-	--short-name="Roseverse Installer" \
-	--author="Project Rose" \
+	--name="Inkay Switcher" \
+	--short-name="Inkay Switcher" \
+	--author="Nico Christmann | Based on Roseverse Installer by Project Rose" \
 	--icon="$(WUHBMENICO)" \
 	--tv-image="$(WUHBTVSPLASH)" \
 	--drc-image="$(WUHBDRCSPLASH)" \

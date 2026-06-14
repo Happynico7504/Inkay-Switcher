@@ -26,8 +26,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: roseverse_installer
-          path: build/roseverse_installer.wuhb
+          name: inkay_switcher
+          path: build/inkay_switcher.wuhb
 
   release:
     needs: build
@@ -35,10 +35,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: roseverse_installer
+          name: inkay_switcher
 
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: Latest
-          files: roseverse_installer.wuhb
+          files: inkay_switcher.wuhb
