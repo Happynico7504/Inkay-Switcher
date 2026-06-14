@@ -20,6 +20,7 @@ namespace Inkay {
         static std::unique_ptr<Tex::LatteColor> ButtonsHolder;
         static std::unique_ptr<Tex::LatteTex> ProjectRoseLogo;
         static std::unique_ptr<Tex::LatteTex> PretendoLogo;
+        static std::unique_ptr<Tex::LatteTex> NicoChristmannLogo;
         static std::unique_ptr<Tex::LatteTex> PortalBG;
 
         static bool DidAlignFontChange = false;
@@ -31,6 +32,7 @@ namespace Inkay {
             ButtonsHolder = std::make_unique<Tex::LatteColor>(Colors::Holder);
             ProjectRoseLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/bara.png");
             PretendoLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/pretendo.png");
+            NicoChristmannLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/nicochristmann.png");
             PortalBG = std::make_unique<Tex::LatteTex>("fs:/vol/content/bakkuguraundo/bara.png");
         }
 
@@ -52,6 +54,7 @@ namespace Inkay {
 
                     if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, 100.0f);
                     if (PretendoLogo) PretendoLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 10.0f);
+                    if (NicoChristmannLogo) NicoChristmannLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 190.0f);
 
                     if (OSCAFESTDFont) {
                         OSCAFESTDFont->SetColor(Colors::Black);
@@ -83,7 +86,7 @@ namespace Inkay {
 
                         OSCAFESTDFont->SetColor(Colors::Default);
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            0.0f, 185.0f,
+                            15.0f, 185.0f,
                             RENDERRATIO_ASPECT_854x480, 250.0f, 100.0f,
                             "Nico Christmann"
                         );
@@ -294,6 +297,7 @@ namespace Inkay {
             if (ButtonsHolder) ButtonsHolder.reset();
             if (ProjectRoseLogo) ProjectRoseLogo.reset();
             if (PretendoLogo) PretendoLogo.reset();
+            if (NicoChristmannLogo) NicoChristmannLogo.reset();
             if (PortalBG) PortalBG.reset();
         }
     }
