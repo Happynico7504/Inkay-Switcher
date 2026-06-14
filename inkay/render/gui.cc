@@ -48,47 +48,47 @@ namespace Inkay {
             switch (Inkay::Download::State) {
                 case DOWNLOADSTATE_SELECT: {
                     if (ButtonsHolder) {
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 10.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 100.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 190.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, -20.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 70.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 160.0f);
                     }
 
-                    if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, 100.0f);
-                    if (PretendoLogo) PretendoLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 10.0f);
-                    if (NicoChristmannLogo) NicoChristmannLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 190.0f);
+                    if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, 70.0f);
+                    if (PretendoLogo) PretendoLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, -20.0f);
+                    if (NicoChristmannLogo) NicoChristmannLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 160.0f);
 
                     if (OSCAFESTDFont) {
                         OSCAFESTDFont->SetColor(Colors::Black);
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            0.0f, -130.0f,
+                            0.0f, -160.0f,
                             RENDERRATIO_ASPECT_854x480, 370.0f, 75.0f,
                             "Select a Inkay version to install"
                         );
 
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            0.0f, -90.0f,
+                            0.0f, -120.0f,
                             RENDERRATIO_ASPECT_854x480, 420.0f, 100.0f,
                             "Inkay (Roseverse) keeps all other Pretendo functionality intact"
                         );
 
                         OSCAFESTDFont->SetColor(Colors::Juxt);
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, 5.0f,
+                            15.0f, -25.0f,
                             RENDERRATIO_ASPECT_854x480, 170.0f, 100.0f,
                             "Juxtaposition"
                         );
 
                         OSCAFESTDFont->SetColor(Colors::Default);
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, 90.0f,
+                            15.0f, 60.0f,
                             RENDERRATIO_ASPECT_854x480, 160.0f, 100.0f,
                             "Roseverse"
                         );
 
                         OSCAFESTDFont->SetColor(Colors::Default);
                         OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, 185.0f,
-                            RENDERRATIO_ASPECT_854x480, 250.0f, 100.0f,
+                            15.0f, 155.0f,
+                            RENDERRATIO_ASPECT_854x480, 170.0f, 100.0f,
                             "Nico Christmann"
                         );
 
@@ -291,9 +291,9 @@ namespace Inkay {
                     }
                 };
 
-                if (DRC::IsTouchInsideSingle(302.0f, 207.5f, 400.0f, 85.0f))      selectVersion("Juxt");
-                else if (DRC::IsTouchInsideSingle(302.0f, 297.5f, 400.0f, 85.0f)) selectVersion("Rose");
-                else if (DRC::IsTouchInsideSingle(302.0f, 387.5f, 400.0f, 85.0f)) selectVersion("Nico");
+                if (DRC::IsTouchInsideSingle(302.0f, 177.5f, 400.0f, 85.0f))      selectVersion("Juxt");
+                else if (DRC::IsTouchInsideSingle(302.0f, 267.5f, 400.0f, 85.0f)) selectVersion("Rose");
+                else if (DRC::IsTouchInsideSingle(302.0f, 357.5f, 400.0f, 85.0f)) selectVersion("Nico");
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
             } else if (Inkay::Download::State == DOWNLOADSTATE_HBAS_WARNING) {
