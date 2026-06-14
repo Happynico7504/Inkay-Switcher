@@ -6,6 +6,7 @@
 #include "eg2/gx2/textures.hh"
 #include "eg2/render/screen.hh"
 #include "eg2/controller/drc.hh"
+#include "eg2/external/core.hh"
 #include "inkay/render/gui.hh"
 #include "inkay/repos/core.hh"
 #include "inkay/repos/versions.hh"
@@ -96,6 +97,36 @@ namespace Inkay {
                             RENDERRATIO_ASPECT_854x480, 150.0f, 70.0f,
                             "Help/More Info",
                             690.0f, 435.0f
+                        );
+                    }
+
+                    break;
+                }
+
+                case DOWNLOADSTATE_HBAS_WARNING: {
+                    if (OSCAFESTDFont && ButtonsHolder) {
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 600.0f, 160.0f, 0.0f, 0.0f);
+
+                        OSCAFESTDFont->SetColor(Colors::Black);
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, -60.0f,
+                            RENDERRATIO_ASPECT_854x480, 560.0f, 70.0f,
+                            "HBAS Inkay detected!"
+                        );
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, 10.0f,
+                            RENDERRATIO_ASPECT_854x480, 560.0f, 60.0f,
+                            "Please uninstall Inkay from the"
+                        );
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, 60.0f,
+                            RENDERRATIO_ASPECT_854x480, 560.0f, 60.0f,
+                            "Homebrew App Store first."
+                        );
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, 130.0f,
+                            RENDERRATIO_ASPECT_854x480, 200.0f, 50.0f,
+                            "B - Go Back"
                         );
                     }
 
@@ -247,22 +278,27 @@ namespace Inkay {
                 AlreadyAppliedGUIChange = true;
             }
 
+            static const char* HBASManifest = "fs:/vol/external01/.get/packages/Inkay/manifest.install";
+
             if (Inkay::Download::State == DOWNLOADSTATE_SELECT) {
-                if (DRC::IsTouchInsideSingle(302.0f, 207.5f, 400.0f, 85.0f)) {
-                    Inkay::Download::PendingVersion = "Juxt";
-                    Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
-                    Inkay::Dirs::LoadEnvironments();
-                } else if (DRC::IsTouchInsideSingle(302.0f, 297.5f, 400.0f, 85.0f)) {
-                    Inkay::Download::PendingVersion = "Rose";
-                    Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
-                    Inkay::Dirs::LoadEnvironments();
-                } else if (DRC::IsTouchInsideSingle(302.0f, 387.5f, 400.0f, 85.0f)) {
-                    Inkay::Download::PendingVersion = "Nico";
-                    Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
-                    Inkay::Dirs::LoadEnvironments();
-                }
+                auto selectVersion = [](const char* version) {
+                    Inkay::Download::PendingVersion = version;
+                    if (IO::FileExists(HBASManifest)) {
+                        Inkay::Download::State.store(DOWNLOADSTATE_HBAS_WARNING);
+                    } else {
+                        Inkay::Download::State.store(DOWNLOADSTATE_SELECT_ENV);
+                        Inkay::Dirs::LoadEnvironments();
+                    }
+                };
+
+                if (DRC::IsTouchInsideSingle(302.0f, 207.5f, 400.0f, 85.0f))      selectVersion("Juxt");
+                else if (DRC::IsTouchInsideSingle(302.0f, 297.5f, 400.0f, 85.0f)) selectVersion("Rose");
+                else if (DRC::IsTouchInsideSingle(302.0f, 387.5f, 400.0f, 85.0f)) selectVersion("Nico");
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
+            } else if (Inkay::Download::State == DOWNLOADSTATE_HBAS_WARNING) {
+                if (DRC::ButtonTriggered(DRC::Input::B))
+                    Inkay::Download::State.store(DOWNLOADSTATE_SELECT);
             } else if (Inkay::Download::State == DOWNLOADSTATE_SELECT_ENV) {
                 usize envCount = Inkay::Dirs::gEnvironments.size();
 

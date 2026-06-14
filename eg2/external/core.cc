@@ -83,6 +83,11 @@ namespace IO {
         return (written == size);
     }
 
+    bool FileExists(const char* path) {
+        struct stat st;
+        return stat(path, &st) == 0;
+    }
+
     std::vector<std::string> ListDirs(const std::string& path) {
         std::vector<std::string> dirs;
 
