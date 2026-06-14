@@ -24,11 +24,13 @@ namespace Inkay {
         static std::unique_ptr<Tex::LatteTex> NicoChristmannLogo;
         static std::unique_ptr<Tex::LatteTex> PortalBG;
 
-        static bool DidAlignFontChange = false;
         static bool AlreadyAppliedGUIChange = false;
+
+        static const char* HBASManifest = "fs:/vol/external01/.get/packages/Inkay/manifest.install";
 
         void Init(void) {
             OSCAFESTDFont = std::make_unique<Tex::LatteFont>(FONT_CAFESTD, 24.0f);
+            OSCAFESTDFont->SwitchRenderType(FONT_ALIGN_CENTER);
             ColorChangingBars = std::make_unique<Tex::LatteColor>(Colors::Default);
             ButtonsHolder = std::make_unique<Tex::LatteColor>(Colors::Holder);
             ProjectRoseLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/bara.png");
@@ -213,20 +215,13 @@ namespace Inkay {
                 case DOWNLOADSTATE_ERROR: {
                     if (OSCAFESTDFont) {
                         OSCAFESTDFont->SetColor(Colors::Black);
-
-                        if (Inkay::Download::HasError.load(std::memory_order_acquire)) {
-                            OSCAFESTDFont->RenderTextCenteredScaled(
-                                0.0f, 0.0f,
-                                RENDERRATIO_ASPECT_854x480, 500.0f, 90.0f,
-                                Inkay::Download::LastError.c_str()
-                            );
-                        } else {
-                            OSCAFESTDFont->RenderTextCenteredScaled(
-                                0.0f, 0.0f,
-                                RENDERRATIO_ASPECT_854x480, 500.0f, 90.0f,
-                                "Unknown error"
-                            );
-                        }
+                        OSCAFESTDFont->RenderTextCenteredScaled(
+                            0.0f, 0.0f,
+                            RENDERRATIO_ASPECT_854x480, 500.0f, 90.0f,
+                            Inkay::Download::HasError.load(std::memory_order_acquire)
+                                ? Inkay::Download::LastError.c_str()
+                                : "Unknown error"
+                        );
                     }
 
                     break;
@@ -247,14 +242,21 @@ namespace Inkay {
             }
         }
 
+        static void TriggerDownload(void) {
+            Inkay::Download::SelectedEnvironment = Inkay::Dirs::gEnvironments[Inkay::Dirs::gSelectedEnv];
+            Inkay::Download::State.store(DOWNLOADSTATE_DOWNLOADING);
+
+            switch (Inkay::Download::Pending) {
+                case Inkay::Download::Source::Juxt: Inkay::Download::JuxtDownload(); break;
+                case Inkay::Download::Source::Rose: Inkay::Download::RoseDownload(); break;
+                case Inkay::Download::Source::Nico: Inkay::Download::NicoDownload(); break;
+                default: break;
+            }
+        }
+
         void Update(void) {
             Inkay::Download::UpdateDownloads();
             DRC::Update();
-
-            if (OSCAFESTDFont && !DidAlignFontChange) {
-                OSCAFESTDFont->SwitchRenderType(FONT_ALIGN_CENTER);
-                DidAlignFontChange = true;
-            }
 
             if (!AlreadyAppliedGUIChange) {
                 u32 color = Colors::Default;
@@ -274,15 +276,12 @@ namespace Inkay {
                 }
 
                 if (ColorChangingBars) ColorChangingBars->SetColor(color);
-
                 AlreadyAppliedGUIChange = true;
             }
 
-            static const char* HBASManifest = "fs:/vol/external01/.get/packages/Inkay/manifest.install";
-
             if (Inkay::Download::State == DOWNLOADSTATE_SELECT) {
-                auto selectVersion = [](const char* version) {
-                    Inkay::Download::PendingVersion = version;
+                auto selectVersion = [](Inkay::Download::Source src) {
+                    Inkay::Download::Pending = src;
                     if (IO::FileExists(HBASManifest)) {
                         Inkay::Download::State.store(DOWNLOADSTATE_HBAS_WARNING);
                     } else {
@@ -291,40 +290,33 @@ namespace Inkay {
                     }
                 };
 
-                if (DRC::IsTouchInsideSingle(302.0f, 177.5f, 400.0f, 85.0f))      selectVersion("Juxt");
-                else if (DRC::IsTouchInsideSingle(302.0f, 267.5f, 400.0f, 85.0f)) selectVersion("Rose");
-                else if (DRC::IsTouchInsideSingle(302.0f, 357.5f, 400.0f, 85.0f)) selectVersion("Nico");
+                if (DRC::IsTouchInsideSingle(302.0f, 177.5f, 400.0f, 85.0f))      selectVersion(Inkay::Download::Source::Juxt);
+                else if (DRC::IsTouchInsideSingle(302.0f, 267.5f, 400.0f, 85.0f)) selectVersion(Inkay::Download::Source::Rose);
+                else if (DRC::IsTouchInsideSingle(302.0f, 357.5f, 400.0f, 85.0f)) selectVersion(Inkay::Download::Source::Nico);
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
+
             } else if (Inkay::Download::State == DOWNLOADSTATE_HBAS_WARNING) {
                 if (DRC::ButtonTriggered(DRC::Input::B))
                     Inkay::Download::State.store(DOWNLOADSTATE_SELECT);
+
             } else if (Inkay::Download::State == DOWNLOADSTATE_SELECT_ENV) {
                 usize envCount = Inkay::Dirs::gEnvironments.size();
 
                 if (envCount > 1) {
-                    if (DRC::IsTouchInsideSingle(382.0f, 265.0f, 90.0f, 50.0f)) Inkay::Dirs::gSelectedEnv = (Inkay::Dirs::gSelectedEnv + 1) % envCount; 
+                    if (DRC::IsTouchInsideSingle(382.0f, 265.0f, 90.0f, 50.0f)) Inkay::Dirs::gSelectedEnv = (Inkay::Dirs::gSelectedEnv + 1) % envCount;
                     if (DRC::IsTouchInsideSingle(382.0f, 165.0f, 60.0f, 40.0f)) Inkay::Dirs::gSelectedEnv = (Inkay::Dirs::gSelectedEnv + envCount - 1) % envCount;
 
-                    if (DRC::ButtonTriggered(DRC::Input::A)) {
-                        Inkay::Download::SelectedEnvironment = Inkay::Dirs::gEnvironments[Inkay::Dirs::gSelectedEnv];
-                        Inkay::Download::State.store(DOWNLOADSTATE_DOWNLOADING);
-
-                        if (Inkay::Download::PendingVersion == "Juxt") Inkay::Download::JuxtDownload();
-                        else if (Inkay::Download::PendingVersion == "Rose") Inkay::Download::RoseDownload();
-                        else if (Inkay::Download::PendingVersion == "Nico") Inkay::Download::NicoDownload();
-                    }
+                    if (DRC::ButtonTriggered(DRC::Input::A)) TriggerDownload();
                 } else {
-                    Inkay::Download::SelectedEnvironment = Inkay::Dirs::gEnvironments[Inkay::Dirs::gSelectedEnv];
-                    Inkay::Download::State.store(DOWNLOADSTATE_DOWNLOADING);
-
-                    if (Inkay::Download::PendingVersion == "Juxt") Inkay::Download::JuxtDownload();
-                    else if (Inkay::Download::PendingVersion == "Rose") Inkay::Download::RoseDownload();
-                    else if (Inkay::Download::PendingVersion == "Nico") Inkay::Download::NicoDownload();
-                } 
+                    TriggerDownload();
+                }
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
-            } else if ((Inkay::Download::State == DOWNLOADSTATE_FINISHED) && (DRC::ButtonTriggered(DRC::Input::B))) Render::FullyRebootConsole();
+
+            } else if ((Inkay::Download::State == DOWNLOADSTATE_FINISHED) && (DRC::ButtonTriggered(DRC::Input::B))) {
+                Render::FullyRebootConsole();
+            }
         }
 
         void Shutdown(void) {
