@@ -26,7 +26,7 @@ namespace Inkay {
 
         static bool AlreadyAppliedGUIChange = false;
 
-        static const char* HBASManifest = "fs:/vol/external01/.get/packages/Inkay/manifest.install";
+        static const char* HBASManifest = "fs:/vol/external01/wiiu/apps/appstore/.get/packages/Inkay/manifest.install";
 
         void Init(void) {
             OSCAFESTDFont = std::make_unique<Tex::LatteFont>(FONT_CAFESTD, 24.0f);
