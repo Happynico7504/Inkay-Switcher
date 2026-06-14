@@ -50,9 +50,9 @@ namespace Inkay {
             switch (Inkay::Download::State) {
                 case DOWNLOADSTATE_SELECT: {
                     if (ButtonsHolder) {
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, -20.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 70.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 400.0f, 85.0f, 0.0f, 160.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, -20.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, 70.0f);
+                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, 160.0f);
                     }
 
                     if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, 70.0f);
@@ -290,9 +290,9 @@ namespace Inkay {
                     }
                 };
 
-                if (DRC::IsTouchInsideSingle(302.0f, 177.5f, 400.0f, 85.0f))      selectVersion(Inkay::Download::Source::Juxt);
-                else if (DRC::IsTouchInsideSingle(302.0f, 267.5f, 400.0f, 85.0f)) selectVersion(Inkay::Download::Source::Rose);
-                else if (DRC::IsTouchInsideSingle(302.0f, 357.5f, 400.0f, 85.0f)) selectVersion(Inkay::Download::Source::Nico);
+                if (DRC::IsTouchInsideSingle(302.0f, 177.5f, 350.0f, 70.0f))      selectVersion(Inkay::Download::Source::Juxt);
+                else if (DRC::IsTouchInsideSingle(302.0f, 267.5f, 350.0f, 70.0f)) selectVersion(Inkay::Download::Source::Rose);
+                else if (DRC::IsTouchInsideSingle(302.0f, 357.5f, 350.0f, 70.0f)) selectVersion(Inkay::Download::Source::Nico);
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
 
