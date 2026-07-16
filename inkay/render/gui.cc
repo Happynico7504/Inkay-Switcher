@@ -93,7 +93,7 @@ namespace Inkay {
                         OSCAFESTDFont->RenderTextCenteredScaled(
                             0.0f, 100.0f,
                             RENDERRATIO_ASPECT_854x480, 170.0f, 80.0f,
-                            "Spacebar"
+                            "Splatfest Network"
                         );
 
                         OSCAFESTDFont->SetColor(Colors::Browser);
