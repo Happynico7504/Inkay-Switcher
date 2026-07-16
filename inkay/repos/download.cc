@@ -76,7 +76,9 @@ namespace Inkay {
                     gRawPhase = 1;
                     const std::string& wpsUrl = (Pending == Source::Rose)
                         ? Inkay::Repos::Web::RoseWPSFileURL
-                        : Inkay::Repos::Web::NicoWPSFileURL;
+                        : (Pending == Source::Nico)
+                            ? Inkay::Repos::Web::NicoWPSFileURL
+                            : Inkay::Repos::Web::SpfnWPSFileURL;
                     StartDownload(gDownloadName, wpsUrl, true);
                 } else {
                     Inkay::Files::WriteWPS(gFileData.data(), gFileData.size());
@@ -99,5 +101,6 @@ namespace Inkay {
         void JuxtDownload(void) { StartDownload("Juxt", Inkay::Repos::Web::JuxtFileURL); }
         void RoseDownload(void) { gRawPhase = 0; StartDownload("Rose", Inkay::Repos::Web::RoseWMSFileURL, true); }
         void NicoDownload(void) { gRawPhase = 0; StartDownload("Nico", Inkay::Repos::Web::NicoWMSFileURL, true); }
+        void SpfnDownload(void) { gRawPhase = 0; StartDownload("Spfn", Inkay::Repos::Web::SpfnWMSFileURL, true); }
     }
 }

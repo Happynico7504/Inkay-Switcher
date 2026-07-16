@@ -10,6 +10,8 @@ namespace Inkay {
             extern std::string RoseWPSFileURL;
             extern std::string NicoWMSFileURL;
             extern std::string NicoWPSFileURL;
+            extern std::string SpfnWMSFileURL;
+            extern std::string SpfnWPSFileURL;
         }
 
         void Init(void);

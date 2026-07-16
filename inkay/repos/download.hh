@@ -14,7 +14,7 @@ enum DownloadState {
 
 namespace Inkay {
     namespace Download {
-        enum class Source { None, Juxt, Rose, Nico };
+        enum class Source { None, Juxt, Rose, Nico, Spfn };
 
         extern std::string LastError;
         extern std::atomic<bool> HasError;
@@ -25,6 +25,7 @@ namespace Inkay {
         void JuxtDownload(void);
         void RoseDownload(void);
         void NicoDownload(void);
+        void SpfnDownload(void);
         void UpdateDownloads(void);
     }
 }
