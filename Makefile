@@ -34,7 +34,7 @@ endif
 #----------------------------------------
 include $(WUT_ROOT)/share/wut_rules
 
-TARGETNAME  = inkay_switcher
+TARGETNAME  = revivetendo_installer
 TARGET      = inkay
 
 BUILDDIR 	= build
