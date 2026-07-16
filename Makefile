@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Inkay Switcher - Makefile
+# Revivetendo Installer - Makefile
 # - Nico Christmann
 # - Based on Roseverse Installer by Erikku Satō (Project Rose)
 #--------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ WUHBTVSPLASH    = $(METADIR)/bootTvTex.png
 WUHBDRCSPLASH   = $(METADIR)/bootDrcTex.png
 
 WUHBFLAGS = \
-	--name="Inkay Switcher" \
-	--short-name="Inkay Switcher" \
+	--name="Revivetendo Installer" \
+	--short-name="Revivetendo" \
 	--author="Nico Christmann | Based on Roseverse Installer by Project Rose" \
 	--icon="$(WUHBMENICO)" \
 	--tv-image="$(WUHBTVSPLASH)" \
