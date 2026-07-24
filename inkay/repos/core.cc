@@ -24,7 +24,7 @@ namespace Inkay {
         static const char* SpfnWMSURL = "https://git.spbr.net/spacebar/inkay/releases/download/latest/Inkay-spfn.wms";
         static const char* SpfnWPSURL = "https://git.spbr.net/spacebar/inkay/releases/download/latest/Inkay-spfn.wps";
         static const char* AromaAPI = "https://aroma.foryour.cafe/api/check_versions";
-        static const char* BrowserURL = "https://projectrose.cafe/roseverse_installer/help";
+        static const char* BrowserURL = "https://revivetendo.nicochristmann.net";
 
         void Init(void) {
             Network::GiveCertCA("fs:/vol/content/shoumeisho/CA.pem");
