@@ -14,18 +14,13 @@ enum DownloadState {
 
 namespace Inkay {
     namespace Download {
-        enum class Source { None, Juxt, Rose, Nico, Spfn };
-
         extern std::string LastError;
         extern std::atomic<bool> HasError;
-        extern Source Pending;
+        extern int PendingIndex; // index into Inkay::Repos::Sources, -1 = none selected
         extern std::string SelectedEnvironment;
         extern std::atomic<DownloadState> State;
 
-        void JuxtDownload(void);
-        void RoseDownload(void);
-        void NicoDownload(void);
-        void SpfnDownload(void);
+        void StartSourceDownload(int index);
         void UpdateDownloads(void);
     }
 }

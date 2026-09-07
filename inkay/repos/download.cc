@@ -14,13 +14,21 @@ namespace Inkay {
         std::string SelectedEnvironment;
         std::atomic<bool> HasError{false};
         std::atomic<DownloadState> State{DOWNLOADSTATE_SELECT};
-        Source Pending{Source::None};
+        int PendingIndex{-1};
 
         static std::vector<u8> gFileData;
         static std::string gDownloadName;
         static std::atomic<bool> gPendingWrite{false};
         static bool gIsRawDownload{false};
         static int gRawPhase{0};
+
+        // Real .wms/.wps modules are ELF binaries; anything else (e.g. a GitHub
+        // rate-limit/error JSON body that slipped past the HTTP status check) is bogus.
+        static const usize kMinRawDownloadSize = 4096;
+
+        static bool LooksLikeELF(const std::vector<u8>& data) {
+            return data.size() >= 4 && data[0] == 0x7F && data[1] == 'E' && data[2] == 'L' && data[3] == 'F';
+        }
 
         static void SetError(const std::string& msg) {
             LastError = msg;
@@ -56,13 +64,8 @@ namespace Inkay {
                 return;
             }
 
-            if (gFileData.empty()) {
-                SetError(gDownloadName + ": Download data empty");
-                return;
-            }
-
             if (gFileData.size() < 4) {
-                SetError(gDownloadName + ": Download too small");
+                SetError(gDownloadName + ": Download too small (" + std::to_string(gFileData.size()) + " bytes)");
                 return;
             }
 
@@ -70,22 +73,44 @@ namespace Inkay {
             SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s %u bytes\n", gDownloadName.c_str(), (unsigned)gFileData.size());
 
             if (gIsRawDownload) {
+                if (gFileData.size() < kMinRawDownloadSize) {
+                    SetError(gDownloadName + ": Download too small (" + std::to_string(gFileData.size()) + " bytes), likely a bad response instead of the real file");
+                    return;
+                }
+
+                if (!LooksLikeELF(gFileData)) {
+                    SetError(gDownloadName + ": Downloaded file is not a valid module (bad signature)");
+                    return;
+                }
+
                 if (gRawPhase == 0) {
-                    Inkay::Files::WriteWMS(gFileData.data(), gFileData.size());
+                    if (!Inkay::Files::WriteWMS(gFileData.data(), gFileData.size())) {
+                        SetError(gDownloadName + ": Failed to write module file");
+                        return;
+                    }
                     SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s WMS written\n", gDownloadName.c_str());
                     gRawPhase = 1;
-                    const std::string& wpsUrl = (Pending == Source::Rose)
-                        ? Inkay::Repos::Web::RoseWPSFileURL
-                        : (Pending == Source::Nico)
-                            ? Inkay::Repos::Web::NicoWPSFileURL
-                            : Inkay::Repos::Web::SpfnWPSFileURL;
-                    StartDownload(gDownloadName, wpsUrl, true);
+
+                    if (PendingIndex < 0 || (usize)PendingIndex >= Inkay::Repos::Sources.size()) {
+                        SetError(gDownloadName + ": Source no longer available");
+                        return;
+                    }
+
+                    StartDownload(gDownloadName, Inkay::Repos::Sources[PendingIndex].wpsUrl, true);
                 } else {
-                    Inkay::Files::WriteWPS(gFileData.data(), gFileData.size());
+                    if (!Inkay::Files::WriteWPS(gFileData.data(), gFileData.size())) {
+                        SetError(gDownloadName + ": Failed to write plugin file");
+                        return;
+                    }
                     SYS::Report::Log("Inkay::Download::UpdateDownloads(): %s WPS written, install complete\n", gDownloadName.c_str());
                     gRawPhase = 0;
                     State.store(DOWNLOADSTATE_FINISHED, std::memory_order_release);
                 }
+                return;
+            }
+
+            if (gFileData.size() < kMinRawDownloadSize) {
+                SetError(gDownloadName + ": Download too small (" + std::to_string(gFileData.size()) + " bytes), likely a bad response instead of the real file");
                 return;
             }
 
@@ -98,9 +123,27 @@ namespace Inkay {
             State.store(DOWNLOADSTATE_FINISHED, std::memory_order_release);
         }
 
-        void JuxtDownload(void) { StartDownload("Juxt", Inkay::Repos::Web::JuxtFileURL); }
-        void RoseDownload(void) { gRawPhase = 0; StartDownload("Rose", Inkay::Repos::Web::RoseWMSFileURL, true); }
-        void NicoDownload(void) { gRawPhase = 0; StartDownload("Nico", Inkay::Repos::Web::NicoWMSFileURL, true); }
-        void SpfnDownload(void) { gRawPhase = 0; StartDownload("Spfn", Inkay::Repos::Web::SpfnWMSFileURL, true); }
+        void StartSourceDownload(int index) {
+            if (index < 0 || (usize)index >= Inkay::Repos::Sources.size()) {
+                SetError("Invalid source selected");
+                return;
+            }
+
+            PendingIndex = index;
+            gRawPhase = 0;
+
+            const Inkay::Repos::SourceInfo& src = Inkay::Repos::Sources[index];
+
+            switch (src.type) {
+                case Inkay::Repos::SourceType::GithubZip:
+                    StartDownload(src.name, src.zipUrl, false);
+                    break;
+
+                case Inkay::Repos::SourceType::GithubRaw:
+                case Inkay::Repos::SourceType::DirectRaw:
+                    StartDownload(src.name, src.wmsUrl, true);
+                    break;
+            }
+        }
     }
 }

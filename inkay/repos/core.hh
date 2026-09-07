@@ -1,18 +1,26 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "eg2/libs/typedefs.h"
 
 namespace Inkay {
     namespace Repos {
-        namespace Web {
-            extern std::string JuxtFileURL;
-            extern std::string RoseWMSFileURL;
-            extern std::string RoseWPSFileURL;
-            extern std::string NicoWMSFileURL;
-            extern std::string NicoWPSFileURL;
-            extern std::string SpfnWMSFileURL;
-            extern std::string SpfnWPSFileURL;
-        }
+        enum class SourceType { GithubZip, GithubRaw, DirectRaw };
+
+        struct SourceInfo {
+            std::string id;
+            std::string name;
+            u32 color{0x00C900FF};
+            SourceType type{SourceType::GithubZip};
+            std::string repo;      // "owner/name", resolved via GitHub API for GithubZip/GithubRaw
+            std::string zipUrl;    // resolved release asset URL, GithubZip only
+            std::string wmsUrl;    // resolved (GithubRaw) or manifest-provided (DirectRaw) module URL
+            std::string wpsUrl;    // resolved (GithubRaw) or manifest-provided (DirectRaw) plugin URL
+        };
+
+        extern std::vector<SourceInfo> Sources;
+        extern bool SourcesLoaded;
 
         void Init(void);
         void AboutBrowserURL(void);

@@ -16,6 +16,8 @@ namespace Inkay {
             }
 
             int count = (int)mz_zip_reader_get_num_files(&zip);
+            bool wroteWMS = false;
+            bool wroteWPS = false;
 
             for (int i = 0; i < count; i++) {
                 mz_zip_archive_file_stat st;
@@ -30,19 +32,25 @@ namespace Inkay {
                 if (!data || !size) continue;
 
                 if (name.find(".wms") != std::string::npos) {
-                    Inkay::Files::WriteWMS(data, size);
-                    SYS::Report::Log("Inkay::ZIP::Extract(): WMS extracted\n");
+                    wroteWMS = Inkay::Files::WriteWMS(data, size);
+                    SYS::Report::Log("Inkay::ZIP::Extract(): WMS extracted (%s)\n", wroteWMS ? "ok" : "write failed");
                 }
 
                 if (name.find(".wps") != std::string::npos) {
-                    Inkay::Files::WriteWPS(data, size);
-                    SYS::Report::Log("Inkay::ZIP::Extract(): WPS extracted\n");
+                    wroteWPS = Inkay::Files::WriteWPS(data, size);
+                    SYS::Report::Log("Inkay::ZIP::Extract(): WPS extracted (%s)\n", wroteWPS ? "ok" : "write failed");
                 }
 
                 free(data);
             }
 
             mz_zip_reader_end(&zip);
+
+            if (!wroteWMS || !wroteWPS) {
+                SYS::Report::Log("Inkay::ZIP::Extract(): archive missing expected files or write failed (WMS: %d, WPS: %d)\n", wroteWMS, wroteWPS);
+                return false;
+            }
+
             return true;
         }
     }

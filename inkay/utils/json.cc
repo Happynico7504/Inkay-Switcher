@@ -3,6 +3,7 @@
 #include "eg2/network/curl.hh"
 #include "inkay/repos/core.hh"
 #include <string>
+#include <cstdlib>
 
 namespace Inkay {
     namespace JSON {
@@ -44,6 +45,76 @@ namespace Inkay {
                 if (name.find(".wms") != std::string::npos) outWMSUrl = dlUrl;
                 if (name.find(".wps") != std::string::npos) outWPSUrl = dlUrl;
             }
+        }
+
+        static bool ParseHexColor(const std::string& str, u32& outColor) {
+            std::string hex = str;
+            if (hex.rfind("0x", 0) == 0 || hex.rfind("0X", 0) == 0) hex = hex.substr(2);
+            if (!hex.empty() && hex[0] == '#') hex = hex.substr(1);
+
+            if (hex.size() != 6 && hex.size() != 8) return false;
+            if (hex.size() == 6) hex += "FF";
+
+            char* end = nullptr;
+            unsigned long v = strtoul(hex.c_str(), &end, 16);
+            if (!end || *end != '\0') return false;
+
+            outColor = (u32)v;
+            return true;
+        }
+
+        bool ParseSourcesManifest(const char* url, std::vector<Inkay::Repos::SourceInfo>& outSources) {
+            outSources.clear();
+
+            if (!Network::SetConnection(url)) {
+                SYS::Report::Log("Inkay::JSON::ParseSourcesManifest(): curl fail for: %s\n", url);
+                return false;
+            }
+
+            SYS::Report::Log("Inkay::JSON::ParseSourcesManifest(): HTTP code: %ld\n", Network::GetNumericCode());
+
+            auto j = nlohmann::json::parse(Network::GetLastResponse(), nullptr, false);
+            if (j.is_discarded() || !j.contains("sources") || !j["sources"].is_array()) return false;
+
+            for (const auto& entry : j["sources"]) {
+                if (!entry.contains("id") || !entry.contains("name") || !entry.contains("type")) continue;
+
+                Inkay::Repos::SourceInfo src;
+                src.id = entry["id"].get<std::string>();
+                src.name = entry["name"].get<std::string>();
+
+                std::string type = entry["type"].get<std::string>();
+                if (type == "github_zip") src.type = Inkay::Repos::SourceType::GithubZip;
+                else if (type == "github_raw") src.type = Inkay::Repos::SourceType::GithubRaw;
+                else if (type == "direct_raw") src.type = Inkay::Repos::SourceType::DirectRaw;
+                else {
+                    SYS::Report::Log("Inkay::JSON::ParseSourcesManifest(): unknown type '%s' for source '%s', skipping\n", type.c_str(), src.id.c_str());
+                    continue;
+                }
+
+                if (entry.contains("color") && entry["color"].is_string()) {
+                    u32 color;
+                    if (ParseHexColor(entry["color"].get<std::string>(), color)) src.color = color;
+                }
+
+                if (entry.contains("repo")) src.repo = entry["repo"].get<std::string>();
+                if (entry.contains("wms_url")) src.wmsUrl = entry["wms_url"].get<std::string>();
+                if (entry.contains("wps_url")) src.wpsUrl = entry["wps_url"].get<std::string>();
+
+                if ((src.type == Inkay::Repos::SourceType::GithubZip || src.type == Inkay::Repos::SourceType::GithubRaw) && src.repo.empty()) {
+                    SYS::Report::Log("Inkay::JSON::ParseSourcesManifest(): source '%s' missing 'repo', skipping\n", src.id.c_str());
+                    continue;
+                }
+
+                if (src.type == Inkay::Repos::SourceType::DirectRaw && (src.wmsUrl.empty() || src.wpsUrl.empty())) {
+                    SYS::Report::Log("Inkay::JSON::ParseSourcesManifest(): source '%s' missing wms_url/wps_url, skipping\n", src.id.c_str());
+                    continue;
+                }
+
+                outSources.push_back(std::move(src));
+            }
+
+            return !outSources.empty();
         }
 
         void ParseAromaSHA1(const char* url, std::string& outWmsSHA1, std::string& outWpsSHA1) {

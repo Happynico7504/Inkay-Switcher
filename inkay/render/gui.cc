@@ -19,23 +19,23 @@ namespace Inkay {
         static std::unique_ptr<Tex::LatteFont> OSCAFESTDFont;
         static std::unique_ptr<Tex::LatteColor> ColorChangingBars;
         static std::unique_ptr<Tex::LatteColor> ButtonsHolder;
-        static std::unique_ptr<Tex::LatteTex> ProjectRoseLogo;
-        static std::unique_ptr<Tex::LatteTex> PretendoLogo;
-        static std::unique_ptr<Tex::LatteTex> NicoChristmannLogo;
         static std::unique_ptr<Tex::LatteTex> PortalBG;
 
         static bool AlreadyAppliedGUIChange = false;
 
         static const char* HBASManifest = "fs:/vol/external01/wiiu/apps/appstore/.get/packages/Inkay/manifest.install";
 
+        // Scrollable source-list state (DOWNLOADSTATE_SELECT).
+        static usize gSourceCursor = 0;
+        static usize gSourceScrollTop = 0;
+        static const usize kVisibleSourceRows = 4;
+        static const f32 kSourceRowOffsets[kVisibleSourceRows] = { -105.0f, -35.0f, 35.0f, 105.0f };
+
         void Init(void) {
             OSCAFESTDFont = std::make_unique<Tex::LatteFont>(FONT_CAFESTD, 24.0f);
             OSCAFESTDFont->SwitchRenderType(FONT_ALIGN_CENTER);
             ColorChangingBars = std::make_unique<Tex::LatteColor>(Colors::Default);
             ButtonsHolder = std::make_unique<Tex::LatteColor>(Colors::Holder);
-            ProjectRoseLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/bara.png");
-            PretendoLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/pretendo.png");
-            NicoChristmannLogo = std::make_unique<Tex::LatteTex>("fs:/vol/content/rogo/nicochristmann.png");
             PortalBG = std::make_unique<Tex::LatteTex>("fs:/vol/content/bakkuguraundo/bara.png");
         }
 
@@ -49,16 +49,30 @@ namespace Inkay {
 
             switch (Inkay::Download::State) {
                 case DOWNLOADSTATE_SELECT: {
-                    if (ButtonsHolder) {
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, -105.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, -35.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, 35.0f);
-                        ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, 105.0f);
+                    usize total = Inkay::Repos::Sources.size();
+
+                    if (!Inkay::Repos::SourcesLoaded || total == 0) {
+                        if (OSCAFESTDFont) {
+                            OSCAFESTDFont->SetColor(Colors::Black);
+                            OSCAFESTDFont->RenderTextCenteredScaled(
+                                0.0f, 0.0f,
+                                RENDERRATIO_ASPECT_854x480, 500.0f, 90.0f,
+                                "Failed to load the version list.\nCheck your internet connection."
+                            );
+                        }
+                        break;
                     }
 
-                    if (PretendoLogo) PretendoLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, -105.0f);
-                    if (ProjectRoseLogo) ProjectRoseLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 45.0f, 50.0f, -95.0f, -35.0f);
-                    if (NicoChristmannLogo) NicoChristmannLogo->RenderTexCenteredScaled(RENDERRATIO_ASPECT_854x480, 50.0f, 50.0f, -90.0f, 35.0f);
+                    usize visibleCount = (total < kVisibleSourceRows) ? total : kVisibleSourceRows;
+
+                    if (ButtonsHolder) {
+                        for (usize i = 0; i < visibleCount; i++) {
+                            usize idx = gSourceScrollTop + i;
+                            bool focused = (idx == gSourceCursor);
+                            ButtonsHolder->SetColor(focused ? 0xFFFFFFFFu : (u32)Colors::Holder);
+                            ButtonsHolder->DrawSolidCenteredScaled(RENDERRATIO_ASPECT_854x480, 350.0f, 70.0f, 0.0f, kSourceRowOffsets[i]);
+                        }
+                    }
 
                     if (OSCAFESTDFont) {
                         OSCAFESTDFont->SetColor(Colors::Black);
@@ -68,33 +82,46 @@ namespace Inkay {
                             "Select an Inkay version to install"
                         );
 
-                        OSCAFESTDFont->SetColor(Colors::Juxt);
-                        OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, -110.0f,
-                            RENDERRATIO_ASPECT_854x480, 170.0f, 80.0f,
-                            "Juxtaposition"
-                        );
+                        for (usize i = 0; i < visibleCount; i++) {
+                            usize idx = gSourceScrollTop + i;
+                            const Inkay::Repos::SourceInfo& src = Inkay::Repos::Sources[idx];
 
-                        OSCAFESTDFont->SetColor(Colors::Default);
-                        OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, -40.0f,
-                            RENDERRATIO_ASPECT_854x480, 160.0f, 80.0f,
-                            "Roseverse"
-                        );
+                            OSCAFESTDFont->SetColor(src.color);
+                            OSCAFESTDFont->RenderTextCenteredScaled(
+                                15.0f, kSourceRowOffsets[i] - 5.0f,
+                                RENDERRATIO_ASPECT_854x480, 170.0f, 80.0f,
+                                src.name.c_str()
+                            );
+                        }
 
-                        OSCAFESTDFont->SetColor(Colors::Default);
-                        OSCAFESTDFont->RenderTextCenteredScaled(
-                            15.0f, 30.0f,
-                            RENDERRATIO_ASPECT_854x480, 170.0f, 80.0f,
-                            "Nico Christmann"
-                        );
+                        // Scroll affordance, only needed once the list overflows the 4 visible rows.
+                        // NOTE: coordinates derived from the row layout below (see IsTouchInsideSingle
+                        // calls in Update()) rather than measured on hardware/Cemu - nudge if misaligned.
+                        if (total > kVisibleSourceRows) {
+                            OSCAFESTDFont->SetColor(gSourceScrollTop > 0 ? Colors::Black : Colors::Holder);
+                            OSCAFESTDFont->RenderTextCenteredScaled(
+                                250.0f, -50.0f,
+                                RENDERRATIO_ASPECT_854x480, 60.0f, 40.0f,
+                                "^"
+                            );
 
-                        OSCAFESTDFont->SetColor(Colors::Default);
-                        OSCAFESTDFont->RenderTextCenteredScaled(
-                            0.0f, 100.0f,
-                            RENDERRATIO_ASPECT_854x480, 170.0f, 80.0f,
-                            "Splatfestival Network"
-                        );
+                            OSCAFESTDFont->SetColor((gSourceScrollTop + visibleCount < total) ? Colors::Black : Colors::Holder);
+                            OSCAFESTDFont->RenderTextCenteredScaled(
+                                250.0f, 50.0f,
+                                RENDERRATIO_ASPECT_854x480, 60.0f, 40.0f,
+                                "v"
+                            );
+
+                            char counter[64];
+                            snprintf(counter, sizeof(counter), "%d / %d", (int)(gSourceCursor + 1), (int)total);
+
+                            OSCAFESTDFont->SetColor(Colors::Black);
+                            OSCAFESTDFont->RenderTextCenteredScaled(
+                                250.0f, 0.0f,
+                                RENDERRATIO_ASPECT_854x480, 80.0f, 30.0f,
+                                counter
+                            );
+                        }
 
                         OSCAFESTDFont->SetColor(Colors::Browser);
                         OSCAFESTDFont->RenderTextScaled(
@@ -247,14 +274,7 @@ namespace Inkay {
         static void TriggerDownload(void) {
             Inkay::Download::SelectedEnvironment = Inkay::Dirs::gEnvironments[Inkay::Dirs::gSelectedEnv];
             Inkay::Download::State.store(DOWNLOADSTATE_DOWNLOADING);
-
-            switch (Inkay::Download::Pending) {
-                case Inkay::Download::Source::Juxt: Inkay::Download::JuxtDownload(); break;
-                case Inkay::Download::Source::Rose: Inkay::Download::RoseDownload(); break;
-                case Inkay::Download::Source::Nico: Inkay::Download::NicoDownload(); break;
-                case Inkay::Download::Source::Spfn: Inkay::Download::SpfnDownload(); break;
-                default: break;
-            }
+            Inkay::Download::StartSourceDownload(Inkay::Download::PendingIndex);
         }
 
         void Update(void) {
@@ -283,8 +303,10 @@ namespace Inkay {
             }
 
             if (Inkay::Download::State == DOWNLOADSTATE_SELECT) {
-                auto selectVersion = [](Inkay::Download::Source src) {
-                    Inkay::Download::Pending = src;
+                usize total = Inkay::Repos::Sources.size();
+
+                auto selectSource = [](usize idx) {
+                    Inkay::Download::PendingIndex = (int)idx;
                     if (IO::FileExists(HBASManifest)) {
                         Inkay::Download::State.store(DOWNLOADSTATE_HBAS_WARNING);
                     } else {
@@ -293,10 +315,46 @@ namespace Inkay {
                     }
                 };
 
-                if (DRC::IsTouchInsideSingle(302.0f,  92.5f, 350.0f, 70.0f))      selectVersion(Inkay::Download::Source::Juxt);
-                else if (DRC::IsTouchInsideSingle(302.0f, 162.5f, 350.0f, 70.0f)) selectVersion(Inkay::Download::Source::Rose);
-                else if (DRC::IsTouchInsideSingle(302.0f, 232.5f, 350.0f, 70.0f)) selectVersion(Inkay::Download::Source::Nico);
-                else if (DRC::IsTouchInsideSingle(302.0f, 302.5f, 350.0f, 70.0f)) selectVersion(Inkay::Download::Source::Spfn);
+                if (Inkay::Repos::SourcesLoaded && total > 0) {
+                    if (gSourceCursor >= total) gSourceCursor = total - 1;
+
+                    usize visibleCount = (total < kVisibleSourceRows) ? total : kVisibleSourceRows;
+                    if (gSourceScrollTop > total - visibleCount) gSourceScrollTop = total - visibleCount;
+
+                    static const f32 kRowTouchY[kVisibleSourceRows] = { 92.5f, 162.5f, 232.5f, 302.5f };
+
+                    for (usize i = 0; i < visibleCount; i++) {
+                        if (DRC::IsTouchInsideSingle(302.0f, kRowTouchY[i], 350.0f, 70.0f)) {
+                            usize idx = gSourceScrollTop + i;
+                            gSourceCursor = idx;
+                            selectSource(idx);
+                            break;
+                        }
+                    }
+
+                    if (total > kVisibleSourceRows) {
+                        // Derived from kRowTouchY via the same centered-scaled mapping (center 477/232.5,
+                        // touch = center + offset - size/2) - verify visually on hardware/Cemu.
+                        if (DRC::IsTouchInsideSingle(677.0f, 162.5f, 60.0f, 40.0f) && gSourceScrollTop > 0) {
+                            gSourceScrollTop--;
+                        }
+                        if (DRC::IsTouchInsideSingle(677.0f, 262.5f, 60.0f, 40.0f) && gSourceScrollTop + visibleCount < total) {
+                            gSourceScrollTop++;
+                        }
+                    }
+
+                    if (DRC::ButtonTriggered(DRC::Input::Down) && gSourceCursor + 1 < total) {
+                        gSourceCursor++;
+                        if (gSourceCursor >= gSourceScrollTop + visibleCount) gSourceScrollTop = gSourceCursor - visibleCount + 1;
+                    }
+
+                    if (DRC::ButtonTriggered(DRC::Input::Up) && gSourceCursor > 0) {
+                        gSourceCursor--;
+                        if (gSourceCursor < gSourceScrollTop) gSourceScrollTop = gSourceCursor;
+                    }
+
+                    if (DRC::ButtonTriggered(DRC::Input::A)) selectSource(gSourceCursor);
+                }
 
                 if (DRC::IsTouchInsideSingle(760.0f, 435.0f, 150.0f, 70.0f)) Inkay::Repos::AboutBrowserURL();
 
@@ -327,9 +385,6 @@ namespace Inkay {
             if (OSCAFESTDFont) OSCAFESTDFont.reset();
             if (ColorChangingBars) ColorChangingBars.reset();
             if (ButtonsHolder) ButtonsHolder.reset();
-            if (ProjectRoseLogo) ProjectRoseLogo.reset();
-            if (PretendoLogo) PretendoLogo.reset();
-            if (NicoChristmannLogo) NicoChristmannLogo.reset();
             if (PortalBG) PortalBG.reset();
         }
     }

@@ -204,9 +204,21 @@ namespace Network {
 
         CURLcode res = curl_easy_perform(curl);
 
+        long httpCode = -1;
+        if (res == CURLE_OK) {
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+            gHttpCode = httpCode;
+
+            if (httpCode != 200) {
+                gLastCurlError = "Unexpected HTTP status " + std::to_string(httpCode);
+            }
+        } else {
+            gLastCurlError = curl_easy_strerror(res);
+        }
+
         curl_easy_cleanup(curl);
 
-        return res == CURLE_OK;
+        return res == CURLE_OK && httpCode == 200;
     }
 
     void DownloadAsync(const std::string& url, std::vector<u8>* outData) {

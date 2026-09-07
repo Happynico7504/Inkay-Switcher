@@ -8,23 +8,40 @@
 
 namespace Inkay {
     namespace Repos {
-        namespace Web {
-            std::string JuxtFileURL;
-            std::string RoseWMSFileURL;
-            std::string RoseWPSFileURL;
-            std::string NicoWMSFileURL;
-            std::string NicoWPSFileURL;
-            std::string SpfnWMSFileURL;
-            std::string SpfnWPSFileURL;
-        }
+        std::vector<SourceInfo> Sources;
+        bool SourcesLoaded = false;
 
-        static const char* JuxtREPO = "https://api.github.com/repos/PretendoNetwork/Inkay/releases/latest";
-        static const char* RoseREPO = "https://api.github.com/repos/Project-Rose/Inkay-Roseverse/releases/latest";
-        static const char* NicoREPO  = "https://api.github.com/repos/Happynico7504/Inkay-NicoChristmann/releases/latest";
-        static const char* SpfnWMSURL = "https://git.spbr.net/spacebar/inkay/releases/download/latest/Inkay-spfn.wms";
-        static const char* SpfnWPSURL = "https://git.spbr.net/spacebar/inkay/releases/download/latest/Inkay-spfn.wps";
+        // Served from the dedicated Inkay-Switcher-Config repo so the source list can be
+        // updated without shipping a new app release. Update the branch/path if that repo's
+        // layout ends up different.
+        static const char* SourcesManifestURL = "https://raw.githubusercontent.com/Happynico7504/Inkay-Switcher-Config/main/sources.json";
+
         static const char* AromaAPI = "https://aroma.foryour.cafe/api/check_versions";
         static const char* BrowserURL = "https://revivetendo.nicochristmann.net";
+
+        static std::string GitHubReleasesAPI(const std::string& repo) {
+            return "https://api.github.com/repos/" + repo + "/releases/latest";
+        }
+
+        static void ResolveSource(SourceInfo& src) {
+            switch (src.type) {
+                case SourceType::GithubZip: {
+                    std::string api = GitHubReleasesAPI(src.repo);
+                    Inkay::JSON::ParseGitHubDownloadURL(api.c_str(), src.zipUrl);
+                    break;
+                }
+
+                case SourceType::GithubRaw: {
+                    std::string api = GitHubReleasesAPI(src.repo);
+                    Inkay::JSON::ParseGitHubRawFileURLs(api.c_str(), src.wmsUrl, src.wpsUrl);
+                    break;
+                }
+
+                case SourceType::DirectRaw:
+                    // wmsUrl/wpsUrl already come straight from the manifest.
+                    break;
+            }
+        }
 
         void Init(void) {
             Network::GiveCertCA("fs:/vol/content/shoumeisho/CA.pem");
@@ -32,12 +49,13 @@ namespace Inkay {
             Network::SetHeader("Accept: application/vnd.github+json");
             Network::SetHeader("X-GitHub-Api-Version: 2022-11-28");
 
-            Inkay::JSON::ParseGitHubDownloadURL(JuxtREPO, Web::JuxtFileURL);
-            Inkay::JSON::ParseGitHubRawFileURLs(RoseREPO, Web::RoseWMSFileURL, Web::RoseWPSFileURL);
-            Inkay::JSON::ParseGitHubRawFileURLs(NicoREPO,  Web::NicoWMSFileURL, Web::NicoWPSFileURL);
+            SourcesLoaded = Inkay::JSON::ParseSourcesManifest(SourcesManifestURL, Sources);
 
-            Web::SpfnWMSFileURL = SpfnWMSURL;
-            Web::SpfnWPSFileURL = SpfnWPSURL;
+            if (!SourcesLoaded) {
+                SYS::Report::Log("Inkay::Repos::Init(): failed to load source manifest from %s\n", SourcesManifestURL);
+            }
+
+            for (auto& src : Sources) ResolveSource(src);
 
             Inkay::JSON::ParseAromaSHA1(AromaAPI, Inkay::Versions::WMS::JuxtSHA1, Inkay::Versions::WPS::JuxtSHA1);
 
@@ -51,26 +69,19 @@ namespace Inkay {
             SYS::Report::Log("Juxt WMS: %s\n", Inkay::Versions::WMS::JuxtSHA1.c_str());
             SYS::Report::Log("Juxt WPS: %s\n", Inkay::Versions::WPS::JuxtSHA1.c_str());
             SYS::Report::Log("Juxt PLG: %s\n\n", ok ? "true" : "false");
-            SYS::Report::Log("Juxt URL: %s\n", Web::JuxtFileURL.c_str());
-            SYS::Report::Log("Rose WMS: %s\n", Web::RoseWMSFileURL.c_str());
-            SYS::Report::Log("Rose WPS: %s\n", Web::RoseWPSFileURL.c_str());
-            SYS::Report::Log("Nico WMS: %s\n", Web::NicoWMSFileURL.c_str());
-            SYS::Report::Log("Nico WPS: %s\n", Web::NicoWPSFileURL.c_str());
-            SYS::Report::Log("Spfn WMS: %s\n", Web::SpfnWMSFileURL.c_str());
-            SYS::Report::Log("Spfn WPS: %s\n", Web::SpfnWPSFileURL.c_str());
+
+            for (const auto& src : Sources) {
+                SYS::Report::Log("Source '%s' (%s): zip=%s wms=%s wps=%s\n",
+                    src.id.c_str(), src.name.c_str(), src.zipUrl.c_str(), src.wmsUrl.c_str(), src.wpsUrl.c_str());
+            }
+
             SYS::Report::Log("-----------------------------------\n\n");
         }
 
         void AboutBrowserURL(void) { SYS::Apps::BrowserOpenViewer(BrowserURL); }
 
         void Shutdown(void) {
-            if (!Web::JuxtFileURL.empty()) Web::JuxtFileURL.clear();
-            if (!Web::RoseWMSFileURL.empty()) Web::RoseWMSFileURL.clear();
-            if (!Web::RoseWPSFileURL.empty()) Web::RoseWPSFileURL.clear();
-            if (!Web::NicoWMSFileURL.empty()) Web::NicoWMSFileURL.clear();
-            if (!Web::NicoWPSFileURL.empty()) Web::NicoWPSFileURL.clear();
-            if (!Web::SpfnWMSFileURL.empty()) Web::SpfnWMSFileURL.clear();
-            if (!Web::SpfnWPSFileURL.empty()) Web::SpfnWPSFileURL.clear();
+            Sources.clear();
 
             if (!Inkay::Versions::WMS::LocalSHA1.empty()) Inkay::Versions::WMS::LocalSHA1.clear();
             if (!Inkay::Versions::WMS::JuxtSHA1.empty()) Inkay::Versions::WMS::JuxtSHA1.clear();
