@@ -56,7 +56,8 @@ namespace Inkay {
 
             // Write to temp file - IO::WriteFile handles directory creation
             if (!IO::WriteFile(tempPath.c_str(), data, size, FILEMODE_BIN)) {
-                SYS::Report::Log("Verify::AtomicWrite(): Failed to write temp file\n");
+                SYS::Report::Log("Verify::AtomicWrite(): ERROR - Failed to write temp file at %s\n", tempPath.c_str());
+                SYS::Report::Log("Verify::AtomicWrite(): ERROR - Could not create or write to temp directory: %s\n", TEMP_DIR);
                 IO::RemoveFile(tempPath.c_str());
                 return false;
             }
