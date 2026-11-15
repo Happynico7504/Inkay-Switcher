@@ -57,26 +57,35 @@ namespace Inkay {
                 return false;
             }
 
-            // Verify temp file was created and has correct size
+            // Strict verification: read back and verify exact match
             void* verifyData = nullptr;
             u32 verifySize = 0;
 
             verifyData = IO::ReadFile(tempPath.c_str(), FILEMODE_BIN, &verifySize);
             if (!verifyData) {
-                SYS::Report::Log("Verify::AtomicWrite(): Failed to read back temp file %s\n", tempPath.c_str());
+                SYS::Report::Log("Verify::AtomicWrite(): Failed to read back temp file %s for verification\n", tempPath.c_str());
                 IO::RemoveFile(tempPath.c_str());
                 return false;
             }
 
-            bool sizeMatch = (verifySize == size);
-            if (verifyData) Heap::MEM2::Free(verifyData);
-
-            if (!sizeMatch) {
-                SYS::Report::Log("Verify::AtomicWrite(): Size mismatch for %s (expected %u, got %u)\n",
+            // Verify exact size match
+            if (verifySize != size) {
+                SYS::Report::Log("Verify::AtomicWrite(): Size mismatch verification failed for %s (expected %u bytes, got %u bytes)\n",
                                 tempPath.c_str(), (unsigned)size, verifySize);
+                Heap::MEM2::Free(verifyData);
                 IO::RemoveFile(tempPath.c_str());
                 return false;
             }
+
+            // Verify content matches byte-for-byte
+            if (memcmp(verifyData, data, size) != 0) {
+                SYS::Report::Log("Verify::AtomicWrite(): Content mismatch verification failed for %s\n", tempPath.c_str());
+                Heap::MEM2::Free(verifyData);
+                IO::RemoveFile(tempPath.c_str());
+                return false;
+            }
+
+            Heap::MEM2::Free(verifyData);
 
             // Atomic rename (overwrites existing file)
             if (rename(tempPath.c_str(), finalPath.c_str()) != 0) {
@@ -85,7 +94,7 @@ namespace Inkay {
                 return false;
             }
 
-            SYS::Report::Log("Verify::AtomicWrite(): Successfully wrote %s (%u bytes)\n", finalPath.c_str(), (unsigned)size);
+            SYS::Report::Log("Verify::AtomicWrite(): Successfully wrote and verified %s (%u bytes)\n", finalPath.c_str(), (unsigned)size);
             return true;
         }
 
