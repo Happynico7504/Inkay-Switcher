@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sys/stat.h>
 
 namespace Inkay {
     namespace Verify {
@@ -27,11 +28,26 @@ namespace Inkay {
             return sha256::hex_string(digest, 32);
         }
 
+        static void CreateDirectories(const std::string& path) {
+            std::string current;
+            for (char c : path) {
+                current += c;
+                if (c == '/') mkdir(current.c_str(), 0777);
+            }
+        }
+
         bool AtomicWrite(
             const std::string& finalPath,
             const void* data,
             usize size
         ) {
+            // Create parent directories
+            usize lastSlash = finalPath.find_last_of('/');
+            if (lastSlash != std::string::npos) {
+                std::string folderPath = finalPath.substr(0, lastSlash + 1);
+                CreateDirectories(folderPath);
+            }
+
             std::string tempPath = finalPath + ".tmp";
 
             // Write to temp file
