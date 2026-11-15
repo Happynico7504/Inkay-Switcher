@@ -27,4 +27,6 @@ namespace Network {
     std::string GetLastResponse(void);
     std::string GetLastError(void);
     long GetNumericCode(void);
+    long GetContentLength(void);
+    bool WasAllocationFailed(void);
 }

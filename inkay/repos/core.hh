@@ -17,6 +17,14 @@ namespace Inkay {
             std::string zipUrl;    // resolved release asset URL, GithubZip only
             std::string wmsUrl;    // resolved (GithubRaw) or manifest-provided (DirectRaw) module URL
             std::string wpsUrl;    // resolved (GithubRaw) or manifest-provided (DirectRaw) plugin URL
+
+            // Integrity verification (optional, from manifest)
+            std::string zipHash;   // SHA256 hash of zip file (hex)
+            std::string wmsHash;   // SHA256 hash of WMS module (hex)
+            std::string wpsHash;   // SHA256 hash of WPS plugin (hex)
+            u32 zipSize{0};        // expected size in bytes, 0 = unknown
+            u32 wmsSize{0};        // expected size in bytes, 0 = unknown
+            u32 wpsSize{0};        // expected size in bytes, 0 = unknown
         };
 
         extern std::vector<SourceInfo> Sources;

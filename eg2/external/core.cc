@@ -88,6 +88,10 @@ namespace IO {
         return stat(path, &st) == 0;
     }
 
+    bool RemoveFile(const char* path) {
+        return remove(path) == 0;
+    }
+
     std::vector<std::string> ListDirs(const std::string& path) {
         std::vector<std::string> dirs;
 

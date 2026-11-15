@@ -25,6 +25,8 @@ namespace Network {
 
     static std::atomic<bool> gDownloadFinished(false);
     static std::atomic<bool> gDownloadSuccess(false);
+    static std::atomic<long> gContentLength(0);
+    static std::atomic<bool> gAllocationFailed(false);
 
     static int initSocket(void *ptr, curl_socket_t socket, curlsocktype type) {
         (void)ptr;
@@ -53,7 +55,21 @@ namespace Network {
         if (!userdata) return 0;
 
         auto* out = static_cast<std::vector<u8>*>(userdata);
-        out->insert(out->end(), data, data + total);
+        usize before = out->size();
+
+        try {
+            out->insert(out->end(), data, data + total);
+        } catch (const std::exception&) {
+            gAllocationFailed.store(true, std::memory_order_release);
+            return 0;  // Signal error to curl
+        }
+
+        // Verify insertion succeeded
+        if (out->size() - before != total) {
+            gAllocationFailed.store(true, std::memory_order_release);
+            return 0;  // Signal error to curl
+        }
+
         return total;
     }
 
@@ -194,6 +210,8 @@ namespace Network {
         if (!curl) return false;
 
         outData.clear();
+        gAllocationFailed.store(false, std::memory_order_release);
+        gContentLength.store(0, std::memory_order_release);
 
         ApplyCommonCurlOptions(curl);
 
@@ -211,6 +229,14 @@ namespace Network {
 
             if (httpCode != 200) {
                 gLastCurlError = "Unexpected HTTP status " + std::to_string(httpCode);
+                res = CURLE_HTTP_RETURNED_ERROR;
+            } else {
+                // Capture Content-Length for validation
+                double contentLength = 0;
+                curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength);
+                if (contentLength > 0) {
+                    gContentLength.store((long)contentLength, std::memory_order_release);
+                }
             }
         } else {
             gLastCurlError = curl_easy_strerror(res);
@@ -218,7 +244,12 @@ namespace Network {
 
         curl_easy_cleanup(curl);
 
-        return res == CURLE_OK && httpCode == 200;
+        bool success = res == CURLE_OK && httpCode == 200 && !gAllocationFailed.load(std::memory_order_acquire);
+        if (!success && gAllocationFailed.load(std::memory_order_acquire)) {
+            gLastCurlError = "Memory allocation failed during download";
+        }
+
+        return success;
     }
 
     void DownloadAsync(const std::string& url, std::vector<u8>* outData) {
@@ -249,4 +280,6 @@ namespace Network {
     std::string GetLastResponse(void) { return gResponse; }
     std::string GetLastError(void) { return gLastCurlError; }
     long GetNumericCode(void) { return gHttpCode; }
+    long GetContentLength(void) { return gContentLength.load(std::memory_order_acquire); }
+    bool WasAllocationFailed(void) { return gAllocationFailed.load(std::memory_order_acquire); }
 }

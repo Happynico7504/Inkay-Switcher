@@ -13,5 +13,6 @@ namespace IO {
     void* ReadFile(const char* path, FileMode mode, u32* outSize);
     bool WriteFile(const char* path, const void* data, usize size, FileMode mode);
     bool FileExists(const char* path);
+    bool RemoveFile(const char* path);
     std::vector<std::string> ListDirs(const std::string& path);
 }
