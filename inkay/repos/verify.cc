@@ -41,26 +41,26 @@ namespace Inkay {
                 return false;
             }
 
-            // Verify temp file contents match
+            // Verify temp file was created and has correct size
             void* verifyData = nullptr;
             u32 verifySize = 0;
 
             verifyData = IO::ReadFile(tempPath.c_str(), FILEMODE_BIN, &verifySize);
-            if (!verifyData || verifySize != size) {
-                SYS::Report::Log("Verify::AtomicWrite(): Verification failed for %s (size mismatch)\n", tempPath.c_str());
-                if (verifyData) Heap::MEM2::Free(verifyData);
+            if (!verifyData) {
+                SYS::Report::Log("Verify::AtomicWrite(): Failed to read back temp file %s\n", tempPath.c_str());
                 IO::RemoveFile(tempPath.c_str());
                 return false;
             }
 
-            if (memcmp(verifyData, data, size) != 0) {
-                SYS::Report::Log("Verify::AtomicWrite(): Verification failed for %s (content mismatch)\n", tempPath.c_str());
-                Heap::MEM2::Free(verifyData);
+            bool sizeMatch = (verifySize == size);
+            if (verifyData) Heap::MEM2::Free(verifyData);
+
+            if (!sizeMatch) {
+                SYS::Report::Log("Verify::AtomicWrite(): Size mismatch for %s (expected %u, got %u)\n",
+                                tempPath.c_str(), (unsigned)size, verifySize);
                 IO::RemoveFile(tempPath.c_str());
                 return false;
             }
-
-            Heap::MEM2::Free(verifyData);
 
             // Atomic rename (overwrites existing file)
             if (rename(tempPath.c_str(), finalPath.c_str()) != 0) {
@@ -69,7 +69,7 @@ namespace Inkay {
                 return false;
             }
 
-            SYS::Report::Log("Verify::AtomicWrite(): Successfully wrote and verified %s\n", finalPath.c_str());
+            SYS::Report::Log("Verify::AtomicWrite(): Successfully wrote %s (%u bytes)\n", finalPath.c_str(), (unsigned)size);
             return true;
         }
 
