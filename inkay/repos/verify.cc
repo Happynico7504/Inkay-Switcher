@@ -49,6 +49,14 @@ namespace Inkay {
         ) {
             SYS::Report::Log("Verify::AtomicWrite(): Starting write for %s (%u bytes)\n", finalPath.c_str(), (unsigned)size);
 
+            std::string tempPath = finalPath + ".tmp";
+
+            // Clean up any stale temp file from previous crash
+            if (IO::FileExists(tempPath.c_str())) {
+                SYS::Report::Log("Verify::AtomicWrite(): Cleaning up stale temp file %s\n", tempPath.c_str());
+                IO::RemoveFile(tempPath.c_str());
+            }
+
             // Create parent directories
             usize lastSlash = finalPath.find_last_of('/');
             if (lastSlash != std::string::npos) {
@@ -57,7 +65,6 @@ namespace Inkay {
                 CreateDirectories(folderPath);
             }
 
-            std::string tempPath = finalPath + ".tmp";
             SYS::Report::Log("Verify::AtomicWrite(): Writing to temp file %s\n", tempPath.c_str());
 
             // Write to temp file
